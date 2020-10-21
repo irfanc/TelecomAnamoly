@@ -90,7 +90,7 @@ def csv_test_input(df_train):
     return inputDF
 
 @st.cache()
-def predict_data(Xtrain, Ytrain, Xtest, Ytest):
+def predict_data(Xtest, Ytest):
     """ Function to load the already dumped model and predict the result """
 
     # path = os.getcwd()
@@ -100,7 +100,7 @@ def predict_data(Xtrain, Ytrain, Xtest, Ytest):
         predict, confusion_matrix, class_rpt = lib.predict_data(model, Xtest, Ytest)
 
         # compute model score score
-        x_train, x_test, y_train, y_test = train_test_split(Xtrain, Ytrain, test_size=0.3, random_state=123)
+        # x_train, x_test, y_train, y_test = train_test_split(Xtrain, Ytrain, test_size=0.3, random_state=123)
         score = model.score(Xtest, Ytest)
 
         return predict, score, confusion_matrix, class_rpt
@@ -126,14 +126,15 @@ def get_input_data(inputType, df_train):
 
     return inputDF
 
-
+@st.cache()
 def show_prediction_details (conf_mat, classification_rpt) :
-    st.subheader('Confusion Matrix')
-    st.text (conf_mat)
-    st.subheader("Classification Report")
-    st.text (classification_rpt)
-    st.text ("")
-    st.text ("")
+    if conf_mat is not None and classification_rpt is not None:
+        st.subheader('Confusion Matrix')
+        st.text (conf_mat)
+        st.subheader("Classification Report")
+        st.text (classification_rpt)
+        st.text ("")
+        st.text ("")
 
 @st.cache()
 def display_test_data(inputDF, predict):
@@ -141,7 +142,8 @@ def display_test_data(inputDF, predict):
     inputDF['predicted_attack'] = np.where(inputDF['predicted_attack'] == True, "Attack", "No-Attack")
     return inputDF
 
-def main():
+if __name__ == "__main__":
+    # execute only if run as a script
     st.title("""
      ** Predict Telecom Connection Status -  Attack or No-Attack ** !
     """)
@@ -156,30 +158,28 @@ def main():
     # get the test data
     st.sidebar.subheader("Enter network parameter either manually or from file")
     ret = st.sidebar.radio(" Input Type ", (MANUAL_INPUT , FILE_INPUT))
-    inputDF = get_input_data(ret , df_train)
+    inputDF = get_input_data(ret, df_train)
+
+    conf_mat = None
+    classification_rpt = None
 
     if inputDF is not None:
-        # prepare the data for prediction
-        Xtrain, Ytrain, Xtest, Ytest = prepare_data(df_train.copy(), inputDF, feature_col=FEATURE_COL, target_col=TARGET_COL)
+        if st.button("Predict", key=1):
+            # prepare the data for prediction
+            Xtrain, Ytrain, Xtest, Ytest = prepare_data(df_train.copy(), inputDF.copy(), feature_col=FEATURE_COL, target_col=TARGET_COL)
 
-        # data prediction
-        predict, score, conf_mat, classification_rpt = predict_data(Xtrain, Ytrain, Xtest, Ytest)
-
-        st.subheader("Prediction")
-        if ret is MANUAL_INPUT:
-            st.text(predict[0])
-            if predict[0] is True:
-                output = "There is an Attack "
-            else:
-                output = "There is No-Attack"
-            st.text(output)
-        elif ret is FILE_INPUT:
-            inputDF = display_test_data(inputDF, predict)
-            st.dataframe(inputDF)
+            # data prediction
+            predict, score, conf_mat, classification_rpt = predict_data(Xtest, Ytest)
+            if ret is MANUAL_INPUT:
+                st.text(predict[0])
+                if predict[0] is True:
+                    output = "There is an Attack "
+                else:
+                    output = "There is No-Attack"
+                st.text(output)
+            elif ret is FILE_INPUT:
+                inputDF = display_test_data(inputDF, predict)
+                st.dataframe(inputDF)
 
         if ret is FILE_INPUT and st.checkbox(" Prediction Details ") :
             show_prediction_details(conf_mat, classification_rpt)
-
-if __name__ == "__main__":
-    # execute only if run as a script
-    main()
