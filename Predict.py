@@ -149,37 +149,37 @@ if __name__ == "__main__":
     """)
 
     st.sidebar.header('Inputs')
-
-    # get the train data
-    df_train = get_train_data()
-    FEATURE_COL = list(df_train.drop(columns=['attack']).columns)
-    TARGET_COL = 'attack_code'
-
-    # get the test data
-    st.sidebar.subheader("Enter network parameter either manually or from file")
-    ret = st.sidebar.radio(" Input Type ", (MANUAL_INPUT , FILE_INPUT))
-    inputDF = get_input_data(ret, df_train)
-
-    conf_mat = None
-    classification_rpt = None
-
-    if inputDF is not None:
-        if st.button("Predict", key=1):
-            # prepare the data for prediction
-            Xtrain, Ytrain, Xtest, Ytest = prepare_data(df_train.copy(), inputDF.copy(), feature_col=FEATURE_COL, target_col=TARGET_COL)
-
-            # data prediction
-            predict, score, conf_mat, classification_rpt = predict_data(Xtest, Ytest)
-            if ret is MANUAL_INPUT:
-                st.text(predict[0])
-                if predict[0] is True:
-                    output = "There is an Attack "
-                else:
-                    output = "There is No-Attack"
-                st.text(output)
-            elif ret is FILE_INPUT:
-                inputDF = display_test_data(inputDF, predict)
-                st.dataframe(inputDF)
-
-        if ret is FILE_INPUT and st.checkbox(" Prediction Details ") :
-            show_prediction_details(conf_mat, classification_rpt)
+    #
+    # # get the train data
+    # df_train = get_train_data()
+    # FEATURE_COL = list(df_train.drop(columns=['attack']).columns)
+    # TARGET_COL = 'attack_code'
+    #
+    # # get the test data
+    # st.sidebar.subheader("Enter network parameter either manually or from file")
+    # ret = st.sidebar.radio(" Input Type ", (MANUAL_INPUT , FILE_INPUT))
+    # inputDF = get_input_data(ret, df_train)
+    #
+    # conf_mat = None
+    # classification_rpt = None
+    #
+    # if inputDF is not None:
+    #     if st.button("Predict", key=1):
+    #         # prepare the data for prediction
+    #         Xtrain, Ytrain, Xtest, Ytest = prepare_data(df_train.copy(), inputDF.copy(), feature_col=FEATURE_COL, target_col=TARGET_COL)
+    #
+    #         # data prediction
+    #         predict, score, conf_mat, classification_rpt = predict_data(Xtest, Ytest)
+    #         if ret is MANUAL_INPUT:
+    #             st.text(predict[0])
+    #             if predict[0] is True:
+    #                 output = "There is an Attack "
+    #             else:
+    #                 output = "There is No-Attack"
+    #             st.text(output)
+    #         elif ret is FILE_INPUT:
+    #             inputDF = display_test_data(inputDF, predict)
+    #             st.dataframe(inputDF)
+    #
+    #     if ret is FILE_INPUT and st.checkbox(" Prediction Details ") :
+    #         show_prediction_details(conf_mat, classification_rpt)
