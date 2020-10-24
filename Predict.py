@@ -60,6 +60,8 @@ def create_feature_inputs_sidebar(df):
     d = pd.DataFrame(dict, index=[0])
 
     return d
+
+
 @st.cache
 def prepare_data(df_train, df_test, feature_col, target_col, binary=True, category=True, target=True):
     """ Function to take prepare the input data for model prediction """
@@ -137,7 +139,6 @@ def get_input_data(inputType, df_train):
 
     return inputDF
 
-@st.cache()
 def show_prediction_details (conf_mat, classification_rpt) :
     if conf_mat is not None and classification_rpt is not None:
         st.subheader('Confusion Matrix')
@@ -153,14 +154,31 @@ def display_test_data(inputDF, predict):
     inputDF['predicted_attack'] = np.where(inputDF['predicted_attack'] == True, "Attack", "No-Attack")
     return inputDF
 
+def logger(s, log=False) :
+    if log :
+        print(s)
+
 if __name__ == "__main__":
     # execute only if run as a script
     st.title("""
      ** Predict Telecom Connection Status -  Attack or No-Attack ** !
     """)
+    logger("\n\n\nPredict Telecom Connection Status - Attack of No-Attack !! ", True)
+
+    start = False
+    log = False
 
     st.sidebar.header('Inputs')
-    if st.checkbox("Start", key=2):
+
+    left, right = st.beta_columns(2)
+    ret = False
+    with left:
+        start = st.checkbox("Start", key=2)
+    with right:
+        log = st.checkbox('Enable Logging on console')
+
+    if start:
+        logger("Predict App Started !!", log)
 
         # get the train data
         df_train = get_train_data()
@@ -175,23 +193,27 @@ if __name__ == "__main__":
         inputType = st.sidebar.radio(" Input Type", (FILE_INPUT, MANUAL_INPUT))
 
         if inputType is MANUAL_INPUT:
-            # st.text('Preparing Manual Input')
+            logger('Preparing Manual Input', log)
             inputDF = manual_test_input(df_train)
         elif inputType is FILE_INPUT:
-            # st.text('Preparing File Input')
+            logger('Preparing File Input', log)
             inputDF = csv_test_input(df_train)
 
         if inputDF is not None:
             if st.checkbox("Predict", key=1):
                 # prepare the data for prediction
+                logger('calling prepare_data', log)
                 Xtrain, Ytrain, Xtest, Ytest = prepare_data(df_train.copy(), inputDF.copy(), feature_col=FEATURE_COL, target_col=TARGET_COL)
 
                 # data prediction
                 predict, conf_mat, classification_rpt = predict_data(Xtest, Ytest)
                 if inputType is FILE_INPUT:
+                    logger('display FILE_INPUT', log)
+
                     inputDF = display_test_data(inputDF, predict)
-                    st.dataframe(inputDF)
+                    st.dataframe(inputDF.head(5))
                 elif inputType is MANUAL_INPUT:
+                    logger('display MANUAL_INPUT', log)
                     st.text(predict[0])
                     if predict[0] is True:
                         output = "There is an Attack "
@@ -201,6 +223,8 @@ if __name__ == "__main__":
 
                 if inputType is FILE_INPUT:
                     if st.checkbox(" Prediction Details "):
+                        logger('display Accuracy', log)
+
                         score = predict_details(Xtest, Ytest)
                         st.subheader(" The Accuracy is {}%".format(round(score*100,2)))
-                        # show_prediction_details(conf_mat, classification_rpt)
+                        show_prediction_details(conf_mat, classification_rpt)
