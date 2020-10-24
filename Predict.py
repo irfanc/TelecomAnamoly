@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 # import seaborn as sns
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 # import datetime
 
 # from sklearn.preprocessing import OneHotEncoder,StandardScaler
@@ -21,17 +21,17 @@ from sklearn.model_selection import train_test_split, KFold, cross_val_score
 # from sklearn.svm import SVC
 # from xgboost import XGBClassifier
 # from xgboost import plot_importance
-import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
+# import warnings
+# warnings.simplefilter(action='ignore', category=FutureWarning)
 # from sklearn.neural_network import MLPClassifier
 # from IPython.display import Audio
 # import scipy
 # sound_file ="Neene Modalu.mp3"
 # import time
 import streamlit as st
-import Definitions as lib
 import pickle
 import os, io
+import Definitions as lib
 
 
 FEATURE_COL = None
@@ -60,7 +60,7 @@ def create_feature_inputs_sidebar(df):
     d = pd.DataFrame(dict, index=[0])
 
     return d
-
+@st.cache
 def prepare_data(df_train, df_test, feature_col, target_col, binary=True, category=True, target=True):
     """ Function to take prepare the input data for model prediction """
     train, test = lib.prepare_test_train_data(df_train, df_test, binary=binary, category = category, scaling = False, target = target)
@@ -101,12 +101,23 @@ def predict_data(Xtest, Ytest):
 
         # compute model score score
         # x_train, x_test, y_train, y_test = train_test_split(Xtrain, Ytrain, test_size=0.3, random_state=123)
+        # score = model.score(Xtest, Ytest)
+
+        return predict, confusion_matrix, class_rpt
+
+@st.cache()
+def predict_details(Xtest, Ytest):
+    """ Function to load the already dumped model and predict the result """
+    with open( 'model.mdl', 'rb') as model_file :
+        model = pickle.load(model_file)
+        # st.text(model)
         score = model.score(Xtest, Ytest)
 
-        return predict, score, confusion_matrix, class_rpt
+        return score
+
 
 MANUAL_INPUT = "Manual Input"
-FILE_INPUT = "Input Test File"
+FILE_INPUT = "Test File Input"
 
 @st.cache(allow_output_mutation=True)
 def get_train_data():
@@ -149,37 +160,47 @@ if __name__ == "__main__":
     """)
 
     st.sidebar.header('Inputs')
-    #
-    # # get the train data
-    # df_train = get_train_data()
-    # FEATURE_COL = list(df_train.drop(columns=['attack']).columns)
-    # TARGET_COL = 'attack_code'
-    #
-    # # get the test data
-    # st.sidebar.subheader("Enter network parameter either manually or from file")
-    # ret = st.sidebar.radio(" Input Type ", (MANUAL_INPUT , FILE_INPUT))
-    # inputDF = get_input_data(ret, df_train)
-    #
-    # conf_mat = None
-    # classification_rpt = None
-    #
-    # if inputDF is not None:
-    #     if st.button("Predict", key=1):
-    #         # prepare the data for prediction
-    #         Xtrain, Ytrain, Xtest, Ytest = prepare_data(df_train.copy(), inputDF.copy(), feature_col=FEATURE_COL, target_col=TARGET_COL)
-    #
-    #         # data prediction
-    #         predict, score, conf_mat, classification_rpt = predict_data(Xtest, Ytest)
-    #         if ret is MANUAL_INPUT:
-    #             st.text(predict[0])
-    #             if predict[0] is True:
-    #                 output = "There is an Attack "
-    #             else:
-    #                 output = "There is No-Attack"
-    #             st.text(output)
-    #         elif ret is FILE_INPUT:
-    #             inputDF = display_test_data(inputDF, predict)
-    #             st.dataframe(inputDF)
-    #
-    #     if ret is FILE_INPUT and st.checkbox(" Prediction Details ") :
-    #         show_prediction_details(conf_mat, classification_rpt)
+    if st.checkbox("Start", key=2):
+
+        # get the train data
+        df_train = get_train_data()
+        FEATURE_COL = list(df_train.drop(columns=['attack']).columns)
+        TARGET_COL = 'attack_code'
+
+        conf_mat = None
+        classification_rpt = None
+
+        # get the test data
+        st.sidebar.subheader("Enter network parameter either manually or from file")
+        inputType = st.sidebar.radio(" Input Type", (FILE_INPUT, MANUAL_INPUT))
+
+        if inputType is MANUAL_INPUT:
+            # st.text('Preparing Manual Input')
+            inputDF = manual_test_input(df_train)
+        elif inputType is FILE_INPUT:
+            # st.text('Preparing File Input')
+            inputDF = csv_test_input(df_train)
+
+        if inputDF is not None:
+            if st.checkbox("Predict", key=1):
+                # prepare the data for prediction
+                Xtrain, Ytrain, Xtest, Ytest = prepare_data(df_train.copy(), inputDF.copy(), feature_col=FEATURE_COL, target_col=TARGET_COL)
+
+                # data prediction
+                predict, conf_mat, classification_rpt = predict_data(Xtest, Ytest)
+                if inputType is FILE_INPUT:
+                    inputDF = display_test_data(inputDF, predict)
+                    st.dataframe(inputDF)
+                elif inputType is MANUAL_INPUT:
+                    st.text(predict[0])
+                    if predict[0] is True:
+                        output = "There is an Attack "
+                    else:
+                        output = "There is No-Attack"
+                    st.text(output)
+
+                if inputType is FILE_INPUT:
+                    if st.checkbox(" Prediction Details "):
+                        score = predict_details(Xtest, Ytest)
+                        st.subheader(" The Accuracy is {}%".format(round(score*100,2)))
+                        # show_prediction_details(conf_mat, classification_rpt)

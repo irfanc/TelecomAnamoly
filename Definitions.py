@@ -1,15 +1,15 @@
 ########################################### IMPORT ALL THE REQUIRED LIBRARIES ###########################################
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+# import seaborn as sns
+# import matplotlib.pyplot as plt
 import datetime
 # get_ipython().run_line_magic('matplotlib', 'inline')
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, confusion_matrix, classification_report
 from sklearn.metrics import roc_curve, roc_auc_score, f1_score, precision_recall_curve
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+# from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn import model_selection
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -20,14 +20,14 @@ from sklearn.model_selection import KFold
 from sklearn.svm import SVC
 # from xgboost import XGBClassifier
 # from xgboost import plot_importance
-import warnings
+# import warnings
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
+# warnings.simplefilter(action='ignore', category=FutureWarning)
 from sklearn.neural_network import MLPClassifier
 from IPython.display import Audio
 import scipy
 
-sound_file = "Neene Modalu.mp3"
+# sound_file = "Neene Modalu.mp3"
 import time
 from sklearn import svm, tree, linear_model, neighbors, naive_bayes, ensemble, discriminant_analysis, gaussian_process, \
     metrics
