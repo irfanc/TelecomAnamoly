@@ -32,6 +32,9 @@ import pickle
 import os, io
 import Definitions as lib
 
+import os
+port = int(os.environ.get(“PORT”, 5000))
+
 if __name__ == "__main__":
     # execute only if run as a script
     st.title("""
